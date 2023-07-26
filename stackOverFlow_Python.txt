@@ -1,0 +1,2 @@
+https://stackoverflow.com/questions/2955061/how-can-you-make-the-form-maximize-to-any-computer-screen-in-a-windows-forms-app
+https://stackoverflow.com/questions/71604658/byte-array-sent-from-my-computer-to-raspberry-pi-changes-after-transmission
