@@ -1,0 +1,521 @@
+namespace TTC_GS_GUI
+{
+    public partial class Gyroscope : Form
+    {
+        Stateform sf;
+
+        // Load images
+        /* Gyroscope Images */
+        //Bitmap horizonBmp = new Bitmap(AttitudeIndicator.Properties.Resources.horizon);
+        //Bitmap borderBmp = new Bitmap(@"..\..\gyroscope\bording(550).bmp");
+        //Bitmap psiCenterBmp = new Bitmap(@"..\..\gyroscope\measurement.png");
+        //Bitmap borderBmp = new Bitmap(@"..\..\gyroscope\bording.bmp");
+        //Bitmap psiCenterBmp = new Bitmap(@"..\..\gyroscope\center2.bmp");
+        Bitmap horizonBmp = new Bitmap(@"..\..\gyroscope\horizon(250).bmp");
+        Bitmap gyroBorderBmp = new Bitmap(@"..\..\gyroscope\Horizon_Background.bmp");
+        Bitmap gyroWingsBmp = new Bitmap(@"..\..\gyroscope\winges.bmp");
+
+        /* PSI Images */
+        Bitmap psiIndicatorBackBmp = new Bitmap(@"..\..\gyroscope\HeadingIndicator_Background.bmp");
+        Bitmap headingWheelBmp = new Bitmap(@"..\..\gyroscope\HeadingWheel.bmp");
+        Bitmap headingIndicatorBmp = new Bitmap(@"..\..\gyroscope\HeadingIndicator.bmp");
+
+        /* Altitude Images */
+        Bitmap altitudeBackBmp = new Bitmap(@"..\..\gyroscope\Altimeter_Background(M).bmp");
+        Bitmap smallNeedleBmp = new Bitmap(@"..\..\gyroscope\SmallNeedleAltimeter.bmp");
+        Bitmap longNeedleBmp = new Bitmap(@"..\..\gyroscope\LongNeedleAltimeter.bmp");
+        Bitmap numberCounterBmp = new Bitmap(@"..\..\gyroscope\Number_Counter.bmp");
+
+        double PitchAngle = 0;
+        double RollAngle = 0;
+        double YawAngle = 0;
+
+        // Pre Display computings
+        //Point ptHeading = new Point(-592, 150); // Center ticks (Bording 300,300 width)
+        //Point ptBoule = new Point(-25, -410); // Ground-Sky initial location (Bording 300, 300 width)
+
+        //Point ptHeadingIndicator = new Point(435, 41); // Middle Psi Indicator (Location for "Region = 300 (height), 300 (width)" for scale "300, 300 width")
+        //Point ptHeadingWheel = new Point(313, 13); // Spinning Middle Wheel Psi (Location for "Region = 300 (height), 300 (width)" for scale "300, 300 width")
+        //Point ptPsiRotation = new Point(150, 150); // Point of rotation (It should be "((graphics clip.X / 2) + X, (graphics clip.Y / 2) + Y)", Graphics Clip: 300)
+
+        /*
+        Point ptBoule = new Point(-55, -768); //Ground-Sky initial location location (Bording 550, 550 width)
+        Point ptHeading = new Point(-592, 277); // Center ticks (Bording 550,550 width)
+        Point ptRotation = new Point(275, 275); // Point of rotation (It should be "((graphics clip.X / 2) + X, (graphics clip.Y / 2) + Y)", Graphics Clip: 550)
+        */
+
+        public Gyroscope(Stateform sf)
+        {
+            InitializeComponent();
+
+            // Set the form's border style to FixedSingle (you can also use FixedDialog)
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+
+            // This bit of code (using double buffer) reduces flicker from Refresh commands
+            this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
+            this.SetStyle(ControlStyles.UserPaint, true);
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
+            this.SetStyle(ControlStyles.ResizeRedraw, true);
+            //////////// END "reduce flicker" code ///////
+        }
+
+        private void Gyroscope_Load(object sender, EventArgs e)
+        {
+
+            
+            // Set the values to the text boxes
+            ControlPhiValue.Text = sf.getGyroPhi().ToString();
+            ControlThetaValue.Text = sf.getGyroTheta().ToString();
+            ControlPsiValue.Text = sf.getGyroPsi().ToString();
+            ControlAltitudeValue.Text = sf.getAltitude().ToString();
+
+            // Set the values to the Sliders
+            ControlPhi.Value = (int)sf.getGyroPhi();
+            ControlTheta.Value = (int)sf.getGyroTheta();
+            ControlPsi.Value = (int)sf.getGyroPsi();
+            ControlAltitude.Value = (int)sf.getAltitude();
+            
+
+        }
+
+        // OnPaint takes care of drawing all graphics to the screen automatically
+        protected override void OnPaint(PaintEventArgs paintEvnt)
+        {
+
+            //--------------------------------------------------------------------------------------------------------------//
+            //########################################### Gyroscope (Phi, Theta) Componenet #################################
+            //--------------------------------------------------------------------------------------------------------------//
+
+            // Calling the base class OnPaint
+            base.OnPaint(paintEvnt);
+
+            // Clipping mask for Attitude Indicator
+            paintEvnt.Graphics.Clip = new Region(new Rectangle(0, 0, 300, 300));
+            paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
+
+            // Pre Display computings
+            Point ptBoule = new Point(25, -250); // Ground-Sky initial location (Bording 250, 250 width)
+            Point ptRotation = new Point(150, 150); // Point of rotation (It should be "graphics clip / 2", Graphics Clip: 300)
+
+            // Sets image transparency
+            gyroBorderBmp.MakeTransparent(Color.Yellow);
+            gyroWingsBmp.MakeTransparent(Color.Yellow);
+
+            // Make sure lines are drawn smoothly
+            paintEvnt.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+
+            // Create the graphics object
+            Graphics gfx = paintEvnt.Graphics;
+
+            // Adjust and draw horizon image
+            //                 Paint      Image      alphaRot   alphaTrs,ptImg,deltaPx                ptRot      scalefactor
+            RotateAndTranslate(paintEvnt, horizonBmp, RollAngle, 0, ptBoule, (double)(2.87 * PitchAngle), ptRotation, 1); //deltaPx is multiplied by 2.87 on horizon 250,250
+            //RotateAndTranslate(paintEvnt, horizonBmp, RollAngle, 0, ptBoule, (double)(4 * PitchAngle), ptRotation, 1); //deltaPx is multiplied by 4 on horizon 300,300
+            //RotateAndTranslate(paintEvnt, horizonBmp, RollAngle, 0, ptBoule, (double)(7.60 * PitchAngle), ptRotation, 1); //deltaPx is multiplied by 7.6 on horizon 550,550
+
+            //                  Paint      Image       yawRot    alphaRot  alphaTrs,ptImg,deltaPx                      ptRot    scalefactor
+            //RotateAndTranslate2(paintEvnt, psiCenterBmp, YawAngle, RollAngle, 0, ptHeading, (double)(7.60 * PitchAngle), ptRotation, 1);
+            //RotateAndTranslate2(paintEvnt, psiCenterBmp, YawAngle, RollAngle, 0, ptHeading, (double)(4 * PitchAngle), ptRotation, 1); //deltaPx is multiplied by 4 on horizon 300,300
+
+            gfx.DrawImage(gyroBorderBmp, 0, 0); // Draw Border Image
+            gfx.DrawImage(gyroWingsBmp, 100, 125); // Draw wings image (Gyroscope Wings 250, 250 width)
+            //gfx.DrawImage(gyroWingsBmp, 75, 125); // Draw wings image (Gyroscope Wings 300, 300 width)
+            //gfx.DrawImage(gyroWingsBmp, 75, 125); // Draw wings image (Gyroscope Wings 300, 300 width)
+            //gfx.DrawImage(gyroWingsBmp, 122, 222); // Draw wings image (Gyroscope Wings 550, 550 width)
+
+            //--------------------------------------------------------------------------------------------------------------//
+            //########################################### PSI Indicator Componenet ##########################################
+            //--------------------------------------------------------------------------------------------------------------//
+            
+            // Clipping mask for Attitude Indicator
+            paintEvnt.Graphics.Clip = new Region(new Rectangle(300, 0, 310, 310));
+            paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
+
+            // Pre Display computings
+            Point ptHeadingIndicator = new Point(443, 46); // Middle Psi Indicator (Location for "Region = 300 (height), 300 (width)" for scale "300, 300 width")
+            Point ptHeadingWheel = new Point(323, 13); // Spinning Middle Wheel Psi (Location for "Region = 300 (height), 300 (width)" for scale "300, 300 width")
+            Point ptPsiRotation = new Point(460, 150); // Point of rotation (It should be "((graphics clip.X / 2) + X, (graphics clip.Y / 2) + Y)", Graphics Clip: 300)
+
+            // Sets image transparency
+            psiIndicatorBackBmp.MakeTransparent(Color.Yellow);
+            headingWheelBmp.MakeTransparent(Color.Yellow);
+            headingIndicatorBmp.MakeTransparent(Color.Yellow);
+
+            double alphaHeadingWheel = InterpolPhyToAngle(sf.getGyroPsi(), 0, 360, 360, 0);
+
+            float scale = 1;
+            //float scale = (float)this.Width / psiIndicatorBackBmp.Width;
+
+            // display mask
+            Pen maskPen = new Pen(this.BackColor, 30 * scale);
+            paintEvnt.Graphics.DrawRectangle(maskPen, 310, 0, 310, 310);
+            //paintEvnt.Graphics.DrawRectangle(maskPen, 300, 0, psiIndicatorBackBmp.Width * scale, psiIndicatorBackBmp.Height * scale);
+
+            // display Psi Indicator Background
+            paintEvnt.Graphics.DrawImage(psiIndicatorBackBmp, 310, 0, (float)(psiIndicatorBackBmp.Width * scale), (float)(psiIndicatorBackBmp.Height * scale));
+
+            // display Psi Heading Wheel
+            RotateImage(paintEvnt, headingWheelBmp, alphaHeadingWheel, ptHeadingWheel, ptPsiRotation, scale);
+
+            // display Psi Heading Indicator            
+            paintEvnt.Graphics.DrawImage(headingIndicatorBmp, (int)(ptHeadingIndicator.X * scale), (int)(ptHeadingIndicator.Y * scale), (float)(headingIndicatorBmp.Width * scale), (float)(headingIndicatorBmp.Height * scale));
+
+            //--------------------------------------------------------------------------------------------------------------//
+            //########################################### Altitude Componenet ###############################################
+            //--------------------------------------------------------------------------------------------------------------//
+            
+            // Clipping mask for Attitude Indicator
+            paintEvnt.Graphics.Clip = new Region(new Rectangle(0, 300, 310, 310));
+            paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
+
+            // Pre Display computings
+            Point ptCounter = new Point(35, 445);
+            Point ptAltRotation = new Point(150, 460);
+            Point ptimgNeedle = new Point(136, 349);
+
+            // Sets image transparency
+            altitudeBackBmp.MakeTransparent(Color.Yellow);
+            longNeedleBmp.MakeTransparent(Color.Yellow);
+            smallNeedleBmp.MakeTransparent(Color.Yellow);
+
+            double alphaSmallNeedle = InterpolPhyToAngle(1000, 0, 10000, 0, 359);
+            double alphaLongNeedle = InterpolPhyToAngle(1000 % 1000, 0, 1000, 0, 359);
+
+            // display counter
+            ScrollCounter(paintEvnt, numberCounterBmp, 5, 1000, ptCounter, scale);
+
+            // diplay mask
+            paintEvnt.Graphics.DrawRectangle(maskPen, 0, 310, altitudeBackBmp.Width * scale, altitudeBackBmp.Height * scale);
+
+            // display cadran
+            paintEvnt.Graphics.DrawImage(altitudeBackBmp, 0, 310, (float)(altitudeBackBmp.Width * scale), (float)(altitudeBackBmp.Height * scale));
+
+            // display small needle
+            RotateImage(paintEvnt, smallNeedleBmp, alphaSmallNeedle, ptimgNeedle, ptAltRotation, scale);
+
+            // display long needle
+            RotateImage(paintEvnt, longNeedleBmp, alphaLongNeedle, ptimgNeedle, ptAltRotation, scale);
+
+            //--------------------------------------------------------------------------------------------------------------//
+            //###########################################  ###############################################
+            //--------------------------------------------------------------------------------------------------------------//
+
+            //ProcessAngles();
+
+        }
+
+        protected void ScrollCounter(PaintEventArgs pe, Image imgBand, int nbOfDigits, int counterValue, Point ptImg, float scaleFactor)
+        {
+            int indexDigit = 0;
+            int digitBoxHeight = (int)(imgBand.Height / 11);
+            int digitBoxWidth = imgBand.Width;
+
+            for (indexDigit = 0; indexDigit < nbOfDigits; indexDigit++)
+            {
+                int currentDigit;
+                int prevDigit;
+                int xOffset;
+                int yOffset;
+                double fader;
+
+                currentDigit = (int)((counterValue / Math.Pow(10, indexDigit)) % 10);
+
+                if (indexDigit == 0)
+                {
+                    prevDigit = 0;
+                }
+                else
+                {
+                    prevDigit = (int)((counterValue / Math.Pow(10, indexDigit - 1)) % 10);
+                }
+
+                // xOffset Computing
+                xOffset = (int)(digitBoxWidth * (nbOfDigits - indexDigit - 1));
+
+                // yOffset Computing	
+                if (prevDigit == 9)
+                {
+                    fader = 0.33;
+                    yOffset = (int)(-((fader + currentDigit) * digitBoxHeight));
+                }
+                else
+                {
+                    yOffset = (int)(-(currentDigit * digitBoxHeight));
+                }
+
+                // Display Image
+                pe.Graphics.DrawImage(imgBand, (ptImg.X + xOffset) * scaleFactor, (ptImg.Y + yOffset) * scaleFactor, imgBand.Width * scaleFactor, imgBand.Height * scaleFactor);
+            }
+        }
+
+        protected void RotateImage(PaintEventArgs paintEvnt, Image img, Double alpha, Point ptImg, Point ptRot, float scaleFactor)
+        {
+            double beta = 0; 	// Angle between the Horizontal line and the line (Left upper corner - Rotation point)
+            double d = 0;		// Distance between Left upper corner and Rotation point)		
+            float deltaX = 0;	// X component of the corrected translation
+            float deltaY = 0;   // Y component of the corrected translation
+
+            // Compute the correction translation coeff
+            if (ptImg != ptRot)
+            {
+                //
+                if (ptRot.X != 0)
+                {
+                    beta = Math.Atan((double)ptRot.Y / (double)ptRot.X);
+                }
+
+                d = Math.Sqrt((ptRot.X * ptRot.X) + (ptRot.Y * ptRot.Y));
+
+                // Computed offset
+                deltaX = (float)(d * (Math.Cos(alpha - beta) - Math.Cos(alpha) * Math.Cos(alpha + beta) - Math.Sin(alpha) * Math.Sin(alpha + beta)));
+                deltaY = (float)(d * (Math.Sin(beta - alpha) + Math.Sin(alpha) * Math.Cos(alpha + beta) - Math.Cos(alpha) * Math.Sin(alpha + beta)));
+            }
+
+            // Rotate image support
+            paintEvnt.Graphics.RotateTransform((float)(alpha * 180 / Math.PI));
+
+            // Dispay image
+            paintEvnt.Graphics.DrawImage(img, (ptImg.X + deltaX) * scaleFactor, (ptImg.Y + deltaY) * scaleFactor, img.Width * scaleFactor, img.Height * scaleFactor);
+
+            // Put image support as found
+            paintEvnt.Graphics.RotateTransform((float)(-alpha * 180 / Math.PI));
+
+        }
+
+        protected double InterpolPhyToAngle(double phyVal, double minPhy, double maxPhy, double minAngle, double maxAngle)
+        {
+            double a;
+            double b;
+            double y;
+            double x;
+
+            if (phyVal < minPhy)
+            {
+                return (double)(minAngle * Math.PI / 180);
+            }
+            else if (phyVal > maxPhy)
+            {
+                return (double)(maxAngle * Math.PI / 180);
+            }
+            else
+            {
+
+                x = phyVal;
+                a = (maxAngle - minAngle) / (maxPhy - minPhy);
+                b = (double)(0.5 * (maxAngle + minAngle - a * (maxPhy + minPhy)));
+                y = a * x + b;
+
+                return (double)(y * Math.PI / 180);
+            }
+        }
+
+        protected void RotateAndTranslate(PaintEventArgs paintEvnt, Image img, Double alphaRot, Double alphaTrs, Point ptImg, double deltaPx, Point ptRot, float scaleFactor)
+        {
+            double beta = 0;
+            double d = 0; //distance
+            float deltaXRot = 0;
+            float deltaYRot = 0;
+            float deltaXTrs = 0;
+            float deltaYTrs = 0;
+
+            // Rotation
+            if (ptImg != ptRot)
+            {
+                // Internals coeffs
+                if (ptRot.X != 0)
+                {
+                    beta = Math.Atan((double)ptRot.Y / (double)ptRot.X);
+                }
+
+                d = Math.Sqrt((ptRot.X * ptRot.X) + (ptRot.Y * ptRot.Y));
+
+                // Computed offset
+                deltaXRot = (float)(d * (Math.Cos(alphaRot - beta) - Math.Cos(alphaRot) * Math.Cos(alphaRot + beta) - Math.Sin(alphaRot) * Math.Sin(alphaRot + beta)));
+                deltaYRot = (float)(d * (Math.Sin(beta - alphaRot) + Math.Sin(alphaRot) * Math.Cos(alphaRot + beta) - Math.Cos(alphaRot) * Math.Sin(alphaRot + beta)));
+            }
+
+            // Translation
+
+            // Computed offset
+            deltaXTrs = (float)(deltaPx * (Math.Sin(alphaTrs)));
+            deltaYTrs = (float)(-deltaPx * (-Math.Cos(alphaTrs)));
+
+            // Rotate image support
+            paintEvnt.Graphics.RotateTransform((float)(alphaRot * 180 / Math.PI));
+
+            // Dispay image
+            paintEvnt.Graphics.DrawImage(img, (ptImg.X + deltaXRot + deltaXTrs) * scaleFactor, (ptImg.Y + deltaYRot + deltaYTrs) * scaleFactor, img.Width * scaleFactor, img.Height * scaleFactor);
+
+            // Put image support as found
+            paintEvnt.Graphics.RotateTransform((float)(-alphaRot * 180 / Math.PI));
+        }
+
+        protected void RotateAndTranslate2(PaintEventArgs pe, Image img, Double yawRot, Double alphaRot, Double alphaTrs, Point ptImg, double deltaPx, Point ptRot, float scaleFactor)
+        {
+            double beta = 0;
+            double d = 0; //distance
+            float deltaXRot = 0;
+            float deltaYRot = 0;
+            float deltaXTrs = 0;
+            float deltaYTrs = 0;
+
+            // Rotation
+            if (ptImg != ptRot)
+            {
+                // Internals coeffs
+                if (ptRot.X != 0)
+                {
+                    beta = Math.Atan((double)ptRot.Y / (double)ptRot.X);
+                }
+
+                d = Math.Sqrt((ptRot.X * ptRot.X) + (ptRot.Y * ptRot.Y));
+
+                // Computed offset
+                deltaXRot = (float)(Math.Cos(alphaRot - beta) - Math.Cos(alphaRot) * Math.Cos(alphaRot + beta) - Math.Sin(alphaRot) * Math.Sin(alphaRot + beta) + yawRot);
+                deltaYRot = (float)(Math.Sin(beta - alphaRot) + Math.Sin(alphaRot) * Math.Cos(alphaRot + beta) - Math.Cos(alphaRot) * Math.Sin(alphaRot + beta));
+            }
+        }    
+
+        private void ProcessAngles()
+        {
+            PitchAngle = -1.0 * sf.getGyroTheta();
+            RollAngle = -1.0 * sf.getGyroPhi() * Math.PI / 180;
+            YawAngle = -1.0 * sf.getGyroPsi() * Math.PI / 180;
+            if (YawAngle < -Math.PI) YawAngle = YawAngle + Math.PI;
+
+            UpdateValues();
+
+            Invalidate();
+        }
+
+        private void UpdateValues()
+        {          
+            Altitude.Text = sf.getAltitude().ToString();
+            altitudeSlider.Value = (int)sf.getAltitude();
+            CubeSATID.Text = sf.getCubeSATID().ToString();
+
+            if (sf.getGyroPhi() < 0)
+            {
+                double z = -(sf.getGyroPhi());
+                phiValue.Text = "-" + (int)z;
+            }
+            else
+            {
+                phiValue.Text = sf.getGyroPhi().ToString();
+                phiSlider.Value = (int)sf.getGyroPhi();
+            }
+
+            if (sf.getGyroTheta() < 0)
+            {
+                double z = -(sf.getGyroTheta());
+                thetaValue.Text = "-" + (int)z;
+            }
+            else
+            {
+                thetaValue.Text = sf.getGyroTheta().ToString();
+                thetaSlider.Value = (int)sf.getGyroTheta();
+            }
+
+            if (sf.getGyroPsi() < 0)
+            {
+                double z = -(sf.getGyroPsi());
+                psiValue.Text = "-" + (int)z;
+            }
+            else
+            {
+                psiValue.Text = sf.getGyroPsi().ToString();
+                psiSlider.Value = (int)sf.getGyroPsi();
+            }
+        }
+
+        private void Gyroscope_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            sf.setIsGyroOpened(false);
+        }
+
+        private void Altitude_TextChanged(object sender, EventArgs e)
+        {
+            this.Invalidate();
+            this.Refresh();
+        }
+
+        private void ControlPhi_ValueChanged(object sender, EventArgs e)
+        {
+            ControlPhiValue.Text = ControlPhi.Value.ToString();
+        }
+
+        private void ControlTheta_ValueChanged(object sender, EventArgs e)
+        {
+            ControlThetaValue.Text = ControlTheta.Value.ToString();
+        }
+
+        private void ControlPsi_ValueChanged(object sender, EventArgs e)
+        {
+            ControlPsiValue.Text = ControlPsi.Value.ToString();
+        }
+
+        private void ControlAltitude_ValueChanged(object sender, EventArgs e)
+        {
+            ControlAltitudeValue.Text = ControlAltitude.Value.ToString();
+        }
+
+        private void ControlPhi_Scroll(object sender, EventArgs e)
+        {
+            ControllingData();
+        }
+
+        private void ControlTheta_Scroll(object sender, EventArgs e)
+        {
+            ControllingData();
+        }
+
+        private void ControlPsi_Scroll(object sender, EventArgs e)
+        {
+            ControllingData();
+        }
+
+        private void ControlAltitude_Scroll(object sender, EventArgs e)
+        {
+            ControllingData();
+        }
+
+        public void ControllingData()
+        {
+            sf.setGyroPhi(double.Parse(ControlPhiValue.Text));
+            sf.setGyroTheta(double.Parse(ControlThetaValue.Text));
+            sf.setGyroPsi(double.Parse(ControlPsiValue.Text));
+            sf.setAltitude(double.Parse(ControlAltitudeValue.Text));
+            string updatedValues = sf.getGyroPhi().ToString() + "," + sf.getGyroTheta().ToString() + "," + sf.getGyroPsi().ToString() + "," + sf.getAltitude().ToString() + "\n";
+            //string updatedValues = sf.getGyroPhi().ToString() + "," + sf.getGyroTheta().ToString() + "," + sf.getGyroPsi().ToString() + "\n";
+            sf.serialPort.Write(updatedValues);
+            Console.Write(updatedValues);
+
+            phiValue.Text = sf.getGyroPhi().ToString();
+            phiSlider.Value = (int)sf.getGyroPhi();
+
+            thetaValue.Text = sf.getGyroTheta().ToString();
+            thetaSlider.Value = (int)sf.getGyroTheta();
+
+            psiValue.Text = sf.getGyroPsi().ToString();
+            psiSlider.Value = (int)sf.getGyroPsi();
+
+            Altitude.Text = sf.getAltitude().ToString();
+            altitudeSlider.Value = (int)sf.getAltitude();
+
+            this.Invalidate();
+            this.Refresh();
+        }
+
+        private void Gyroscope_Activated(object sender, EventArgs e)
+        {
+            Refresh();
+            Invalidate();
+        }
+
+        private void Gyroscope_Deactivate(object sender, EventArgs e)
+        {
+            Refresh();
+            Invalidate();
+        }
+    }
+}
