@@ -30,19 +30,12 @@ namespace TTC_GS_GUI
         double RollAngle = 0;
         double YawAngle = 0;
 
-        // Pre Display computings
+        //Point ptBoule = new Point(-25, -410); //Ground-Sky initial location (Bording 300, 300 width)
         //Point ptHeading = new Point(-592, 150); // Center ticks (Bording 300,300 width)
-        //Point ptBoule = new Point(-25, -410); // Ground-Sky initial location (Bording 300, 300 width)
-
-        //Point ptHeadingIndicator = new Point(435, 41); // Middle Psi Indicator (Location for "Region = 300 (height), 300 (width)" for scale "300, 300 width")
-        //Point ptHeadingWheel = new Point(313, 13); // Spinning Middle Wheel Psi (Location for "Region = 300 (height), 300 (width)" for scale "300, 300 width")
-        //Point ptPsiRotation = new Point(150, 150); // Point of rotation (It should be "((graphics clip.X / 2) + X, (graphics clip.Y / 2) + Y)", Graphics Clip: 300)
-
-        /*
-        Point ptBoule = new Point(-55, -768); //Ground-Sky initial location location (Bording 550, 550 width)
-        Point ptHeading = new Point(-592, 277); // Center ticks (Bording 550,550 width)
-        Point ptRotation = new Point(275, 275); // Point of rotation (It should be "((graphics clip.X / 2) + X, (graphics clip.Y / 2) + Y)", Graphics Clip: 550)
-        */
+        //Point ptRotation = new Point(150, 150); // Point of rotation
+        //Point ptBoule = new Point(-55, -768); //Ground-Sky initial location
+        //Point ptHeading = new Point(-592, 277); // Center ticks
+        //Point ptRotation = new Point(275, 275); // Point of rotation
 
         public Gyroscope(Stateform sf)
         {
@@ -61,20 +54,16 @@ namespace TTC_GS_GUI
 
         private void Gyroscope_Load(object sender, EventArgs e)
         {
-
-            
-            // Set the values to the text boxes
-            ControlPhiValue.Text = sf.getGyroPhi().ToString();
+           
+            /*ControlPhiValue.Text = sf.getGyroPhi().ToString();
             ControlThetaValue.Text = sf.getGyroTheta().ToString();
             ControlPsiValue.Text = sf.getGyroPsi().ToString();
             ControlAltitudeValue.Text = sf.getAltitude().ToString();
 
-            // Set the values to the Sliders
             ControlPhi.Value = (int)sf.getGyroPhi();
             ControlTheta.Value = (int)sf.getGyroTheta();
             ControlPsi.Value = (int)sf.getGyroPsi();
-            ControlAltitude.Value = (int)sf.getAltitude();
-            
+            ControlAltitude.Value = (int)sf.getAltitude();*/
 
         }
 
@@ -91,7 +80,7 @@ namespace TTC_GS_GUI
 
             // Clipping mask for Attitude Indicator
             paintEvnt.Graphics.Clip = new Region(new Rectangle(0, 0, 300, 300));
-            paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
+            //paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
 
             // Pre Display computings
             Point ptBoule = new Point(25, -250); // Ground-Sky initial location (Bording 250, 250 width)
@@ -126,10 +115,10 @@ namespace TTC_GS_GUI
             //--------------------------------------------------------------------------------------------------------------//
             //########################################### PSI Indicator Componenet ##########################################
             //--------------------------------------------------------------------------------------------------------------//
-            
+
             // Clipping mask for Attitude Indicator
             paintEvnt.Graphics.Clip = new Region(new Rectangle(300, 0, 310, 310));
-            paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
+            //paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
 
             // Pre Display computings
             Point ptHeadingIndicator = new Point(443, 46); // Middle Psi Indicator (Location for "Region = 300 (height), 300 (width)" for scale "300, 300 width")
@@ -141,15 +130,17 @@ namespace TTC_GS_GUI
             headingWheelBmp.MakeTransparent(Color.Yellow);
             headingIndicatorBmp.MakeTransparent(Color.Yellow);
 
-            double alphaHeadingWheel = InterpolPhyToAngle(sf.getGyroPsi(), 0, 360, 360, 0);
+            //double alphaHeadingWheel = InterpolPhyToAngle(sf.getGyroPsi(), 0, 360, 360, 0);
+            double alphaHeadingWheel = InterpolPhyToAngle(10, 0, 360, 360, 0);
 
             float scale = 1;
             //float scale = (float)this.Width / psiIndicatorBackBmp.Width;
 
             // display mask
-            Pen maskPen = new Pen(this.BackColor, 30 * scale);
+            //Pen maskPen = new Pen(this.BackColor, 30 * scale);
+            Pen maskPen = new Pen(Color.Transparent, 30 * scale);
             paintEvnt.Graphics.DrawRectangle(maskPen, 310, 0, 310, 310);
-            //paintEvnt.Graphics.DrawRectangle(maskPen, 300, 0, psiIndicatorBackBmp.Width * scale, psiIndicatorBackBmp.Height * scale);
+            //paintEvnt.Graphics.DrawRectangle(maskPen, 310, 0, psiIndicatorBackBmp.Width * scale, psiIndicatorBackBmp.Height * scale);
 
             // display Psi Indicator Background
             paintEvnt.Graphics.DrawImage(psiIndicatorBackBmp, 310, 0, (float)(psiIndicatorBackBmp.Width * scale), (float)(psiIndicatorBackBmp.Height * scale));
@@ -163,10 +154,10 @@ namespace TTC_GS_GUI
             //--------------------------------------------------------------------------------------------------------------//
             //########################################### Altitude Componenet ###############################################
             //--------------------------------------------------------------------------------------------------------------//
-            
+
             // Clipping mask for Attitude Indicator
             paintEvnt.Graphics.Clip = new Region(new Rectangle(0, 300, 310, 310));
-            paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
+            //paintEvnt.Graphics.FillRegion(Brushes.Transparent, paintEvnt.Graphics.Clip);
 
             // Pre Display computings
             Point ptCounter = new Point(35, 445);
@@ -178,10 +169,13 @@ namespace TTC_GS_GUI
             longNeedleBmp.MakeTransparent(Color.Yellow);
             smallNeedleBmp.MakeTransparent(Color.Yellow);
 
+            //double alphaSmallNeedle = InterpolPhyToAngle(sf.getGyroPsi(), 0, 10000, 0, 359);
+            //double alphaLongNeedle = InterpolPhyToAngle(sf.getGyroPsi() % 1000, 0, 1000, 0, 359);
             double alphaSmallNeedle = InterpolPhyToAngle(1000, 0, 10000, 0, 359);
             double alphaLongNeedle = InterpolPhyToAngle(1000 % 1000, 0, 1000, 0, 359);
 
             // display counter
+            //ScrollCounter(paintEvnt, numberCounterBmp, 5, (int)sf.getGyroPsi(), ptCounter, scale);
             ScrollCounter(paintEvnt, numberCounterBmp, 5, 1000, ptCounter, scale);
 
             // diplay mask
@@ -202,9 +196,10 @@ namespace TTC_GS_GUI
 
             //ProcessAngles();
 
+
         }
 
-        protected void ScrollCounter(PaintEventArgs pe, Image imgBand, int nbOfDigits, int counterValue, Point ptImg, float scaleFactor)
+        protected void ScrollCounter(PaintEventArgs paintEvnt, Image imgBand, int nbOfDigits, int counterValue, Point ptImg, float scaleFactor)
         {
             int indexDigit = 0;
             int digitBoxHeight = (int)(imgBand.Height / 11);
@@ -244,7 +239,7 @@ namespace TTC_GS_GUI
                 }
 
                 // Display Image
-                pe.Graphics.DrawImage(imgBand, (ptImg.X + xOffset) * scaleFactor, (ptImg.Y + yOffset) * scaleFactor, imgBand.Width * scaleFactor, imgBand.Height * scaleFactor);
+                paintEvnt.Graphics.DrawImage(imgBand, (ptImg.X + xOffset) * scaleFactor, (ptImg.Y + yOffset) * scaleFactor, imgBand.Width * scaleFactor, imgBand.Height * scaleFactor);
             }
         }
 
@@ -309,7 +304,7 @@ namespace TTC_GS_GUI
             }
         }
 
-        protected void RotateAndTranslate(PaintEventArgs paintEvnt, Image img, Double alphaRot, Double alphaTrs, Point ptImg, double deltaPx, Point ptRot, float scaleFactor)
+        protected void RotateAndTranslate(PaintEventArgs pe, Image img, Double alphaRot, Double alphaTrs, Point ptImg, double deltaPx, Point ptRot, float scaleFactor)
         {
             double beta = 0;
             double d = 0; //distance
@@ -341,40 +336,14 @@ namespace TTC_GS_GUI
             deltaYTrs = (float)(-deltaPx * (-Math.Cos(alphaTrs)));
 
             // Rotate image support
-            paintEvnt.Graphics.RotateTransform((float)(alphaRot * 180 / Math.PI));
+            pe.Graphics.RotateTransform((float)(alphaRot * 180 / Math.PI));
 
             // Dispay image
-            paintEvnt.Graphics.DrawImage(img, (ptImg.X + deltaXRot + deltaXTrs) * scaleFactor, (ptImg.Y + deltaYRot + deltaYTrs) * scaleFactor, img.Width * scaleFactor, img.Height * scaleFactor);
+            pe.Graphics.DrawImage(img, (ptImg.X + deltaXRot + deltaXTrs) * scaleFactor, (ptImg.Y + deltaYRot + deltaYTrs) * scaleFactor, img.Width * scaleFactor, img.Height * scaleFactor);
 
             // Put image support as found
-            paintEvnt.Graphics.RotateTransform((float)(-alphaRot * 180 / Math.PI));
+            pe.Graphics.RotateTransform((float)(-alphaRot * 180 / Math.PI));
         }
-
-        protected void RotateAndTranslate2(PaintEventArgs pe, Image img, Double yawRot, Double alphaRot, Double alphaTrs, Point ptImg, double deltaPx, Point ptRot, float scaleFactor)
-        {
-            double beta = 0;
-            double d = 0; //distance
-            float deltaXRot = 0;
-            float deltaYRot = 0;
-            float deltaXTrs = 0;
-            float deltaYTrs = 0;
-
-            // Rotation
-            if (ptImg != ptRot)
-            {
-                // Internals coeffs
-                if (ptRot.X != 0)
-                {
-                    beta = Math.Atan((double)ptRot.Y / (double)ptRot.X);
-                }
-
-                d = Math.Sqrt((ptRot.X * ptRot.X) + (ptRot.Y * ptRot.Y));
-
-                // Computed offset
-                deltaXRot = (float)(Math.Cos(alphaRot - beta) - Math.Cos(alphaRot) * Math.Cos(alphaRot + beta) - Math.Sin(alphaRot) * Math.Sin(alphaRot + beta) + yawRot);
-                deltaYRot = (float)(Math.Sin(beta - alphaRot) + Math.Sin(alphaRot) * Math.Cos(alphaRot + beta) - Math.Cos(alphaRot) * Math.Sin(alphaRot + beta));
-            }
-        }    
 
         private void ProcessAngles()
         {
@@ -391,7 +360,7 @@ namespace TTC_GS_GUI
         private void UpdateValues()
         {          
             Altitude.Text = sf.getAltitude().ToString();
-            altitudeSlider.Value = (int)sf.getAltitude();
+            //altitudeSlider.Value = (int)sf.getAltitude();
             CubeSATID.Text = sf.getCubeSATID().ToString();
 
             if (sf.getGyroPhi() < 0)
@@ -402,7 +371,7 @@ namespace TTC_GS_GUI
             else
             {
                 phiValue.Text = sf.getGyroPhi().ToString();
-                phiSlider.Value = (int)sf.getGyroPhi();
+                //phiSlider.Value = (int)sf.getGyroPhi();
             }
 
             if (sf.getGyroTheta() < 0)
@@ -413,7 +382,7 @@ namespace TTC_GS_GUI
             else
             {
                 thetaValue.Text = sf.getGyroTheta().ToString();
-                thetaSlider.Value = (int)sf.getGyroTheta();
+                //thetaSlider.Value = (int)sf.getGyroTheta();
             }
 
             if (sf.getGyroPsi() < 0)
@@ -424,7 +393,7 @@ namespace TTC_GS_GUI
             else
             {
                 psiValue.Text = sf.getGyroPsi().ToString();
-                psiSlider.Value = (int)sf.getGyroPsi();
+                //psiSlider.Value = (int)sf.getGyroPsi();
             }
         }
 
@@ -491,19 +460,24 @@ namespace TTC_GS_GUI
             Console.Write(updatedValues);
 
             phiValue.Text = sf.getGyroPhi().ToString();
-            phiSlider.Value = (int)sf.getGyroPhi();
+            //phiSlider.Value = (int)sf.getGyroPhi();
 
             thetaValue.Text = sf.getGyroTheta().ToString();
-            thetaSlider.Value = (int)sf.getGyroTheta();
+            //thetaSlider.Value = (int)sf.getGyroTheta();
 
             psiValue.Text = sf.getGyroPsi().ToString();
-            psiSlider.Value = (int)sf.getGyroPsi();
+            //psiSlider.Value = (int)sf.getGyroPsi();
 
             Altitude.Text = sf.getAltitude().ToString();
-            altitudeSlider.Value = (int)sf.getAltitude();
+            //altitudeSlider.Value = (int)sf.getAltitude();
 
             this.Invalidate();
             this.Refresh();
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
         }
 
         private void Gyroscope_Activated(object sender, EventArgs e)
